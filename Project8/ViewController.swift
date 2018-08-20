@@ -14,6 +14,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var answersLabel: UILabel!
     @IBOutlet weak var currentAnswer: UITextField!
     @IBOutlet weak var scoreLabel: UILabel!
+    @IBOutlet weak var stackView: UIStackView!
     
     //letter group arrays, one to store all buttons, one to store all the buttons being used to spell an answer, one for all the possible solutions
     var letterButtons = [UIButton]()
@@ -27,16 +28,24 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         //MARK: - Outlet Collection for the button action
-        for subview in view.subviews where subview.tag == 1001 {
+        
+        //trying to drill down into the stack view, pull out the view and then the subviews for that view to get to the buttons
+        for subview in stackView.arrangedSubviews {
             //typecast the view as a UIButton, we know it's a button since we explicitly set this up so this is fine.
-            let btn = subview as! UIButton
-            
-            letterButtons.append(btn)
-            
-            //attach a method to our button, when we touch up inside
-            //code equivalent to ctrl-dragging to make connections in IB
-            btn.addTarget(self, action: #selector(letterTapped), for: .touchUpInside)
+            for view in subview.subviews where view.tag == 1001 {
+                
+                let btn = view as! UIButton
+                
+                letterButtons.append(btn)
+                
+                //attach a method to our button, when we touch up inside
+                //code equivalent to ctrl-dragging to make connections in IB
+                btn.addTarget(self, action: #selector(letterTapped), for: .touchUpInside)
+            }
         }
+        
+        
+       loadLevel()
     }
     
     func loadLevel() {
@@ -61,21 +70,18 @@ class ViewController: UIViewController {
                     let answer = parts[0]
                     let clue = parts[1]
                     
-                    //index + 1 because these are zero indexed and we want to start with 1. Ghosts in Residence, for example.
                     clueString += "\(index + 1). \(clue)\n"
                     
                     let solutionWord = answer.replacingOccurrences(of: "|", with: "")
-                    
-                    //to let the user know how many letters are in the solution
                     solutionString += "\(solutionWord.count) letters\n"
                     solutions.append(solutionWord)
                     
-                    //create the letter bits by removing the |, so HA|UNT|ED becomes haunted. We'll use these bits to create our button titles
                     let bits = answer.components(separatedBy: "|")
                     letterBits += bits
                 }
             }
         }
+        
         
         //MARK: - CONFIGURE THE BUTTONS AND LABELS AT LOAD
         cluesLabel.text = clueString.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -91,7 +97,11 @@ class ViewController: UIViewController {
             }
         }
         
+        
+        
     }
+    
+    
 
     @objc func letterTapped(btn: UIButton) {
         //UIButton is sent, we read the letter group on the button and use it to spell words
