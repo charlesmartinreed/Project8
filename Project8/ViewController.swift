@@ -21,7 +21,12 @@ class ViewController: UIViewController {
     var activatedButtons = [UIButton]()
     var solutions = [String]()
     
-    var score = 0
+    //using a property observer, so the score changes are reflected and can be easily altered for anywhere in our code
+    var score = 0 {
+        didSet {
+            scoreLabel.text = "Score: \(score)"
+        }
+    }
     var level = 1
     
     override func viewDidLoad() {
@@ -107,12 +112,62 @@ class ViewController: UIViewController {
         //UIButton is sent, we read the letter group on the button and use it to spell words
         //the letter groups are randomly assigned in our loadLevel()
         
+        //update the text in the currentAnswer label to contain the titleLabel, show the button as activated and hide the button
+        currentAnswer.text = currentAnswer.text! + btn.titleLabel!.text!
+        activatedButtons.append(btn)
+        btn.isHidden = true
+        
     }
 
     @IBAction func submitTapped(_ sender: UIButton) {
+        
+        //uses index(of:) to search through array for an item and, optionally, return the position
+        
+        if let solutionPosition = solutions.index(of: currentAnswer.text!) {
+            activatedButtons.removeAll()
+            
+            //creates an array of [String]
+            var splitAnswers = answersLabel.text!.components(separatedBy: "\n")
+            
+            splitAnswers[solutionPosition] = currentAnswer.text!
+            answersLabel.text = splitAnswers.joined(separator: "\n")
+            
+            currentAnswer.text = ""
+            score += 1
+            
+            //when the score is 7, we know that they got all the words. We present the alert and use the completion handler to execute the levelUp() to go to the next lever
+            if score % 7 == 0 {
+                let ac = UIAlertController(title: "Well done", message: "Are you ready for the next level?", preferredStyle: .alert)
+                ac.addAction(UIAlertAction(title: "Let's go!", style: .default, handler: levelUp))
+                present(ac, animated: true, completion: nil)
+            }
+        }
+       
+        
+    }
+    
+    func levelUp(action: UIAlertAction) {
+        level += 1
+        solutions.removeAll(keepingCapacity: true)
+        
+        loadLevel()
+        
+        for btn in letterButtons {
+            btn.isHidden = false
+        }
     }
     
     @IBAction func clearTapped(_ sender: UIButton) {
+        
+        //clear the label, unhide the button and remove all buttons from the activatedButtons collection
+        currentAnswer.text = ""
+        
+        for btn in activatedButtons {
+            btn.isHidden = false
+        }
+        
+        activatedButtons.removeAll()
+        
     }
     
     
